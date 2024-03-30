@@ -1,0 +1,18 @@
+Pour executer ce programme, vous aurez besoin de pip et d'un serveur Mysql configué sur le port 3306
+Créez un base de données, un tulisateur, et donnez lui les droits sur cette base.
+Ensuite modifiez le fichier settings.py pour ajouter le nom de botre base et votre utilisateur.
+Puis, vous devez installer ces dépendances : 
+pip install django-cors-headers
+pip install pymysql
+pip install djangorestframework-simplejwt
+
+PS : Je ne sais plus comment j'ai installé la librairie rak811
+Faut que je retrouve.
+En attendant, desactivez le code au sein du fichier controler_lora.py
+
+Si vous avez un capteur LORA de disponible, placez la variable globale
+DISPOSE_LORA à True au sein du fichier settings.py
+
+Et pour lancer le programme, mettez vous à la racine du back end et faites :
+python3 manage.py runserver
+
