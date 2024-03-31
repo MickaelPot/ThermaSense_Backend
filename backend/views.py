@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from django.shortcuts import render
 from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
@@ -12,6 +12,8 @@ import time
 
 from .serializers import UserSerializer
 from .serializers import ReleveSerializer
+from .model_releve import Releve
+from django.db.models import Q
 from .model_user import User
 from django.contrib.auth.hashers import make_password, check_password
 
@@ -123,7 +125,6 @@ def authorizeUser(request):
     return JsonResponse({"message": "mail manquant"},safe=False)
 
 
-#@api_view(['GET'])
 def recuperationPeriodiqueTemperature():
     tm = datetime.now()
     iot = demandeTemperature()
@@ -155,3 +156,76 @@ async def event_loop_startup():
     await start_function_event_loop(event_queue)
 
 
+@api_view(['GET'])
+def getTemperatureByDay(request):
+    today = date.today()
+    results = Releve.objects.filter(date__contains=today)
+    
+    tab_results= []
+
+    for resultat in results:
+        resultat.date=resultat.date.hour
+        tab_results.append(resultat)
+
+    tab_classement = []
+    accumulateur = 0
+    taille = len(tab_results)
+    
+    dictionnaire = dict()
+    dictionnaire["heure"] = tab_results[0].date
+    dictionnaire["cumul"] = 0
+
+    for i in range(taille):
+        if tab_results[i].date == dictionnaire["heure"]:
+            dictionnaire["cumul"] = dictionnaire["cumul"]+tab_results[i].temperature
+            accumulateur=accumulateur+1
+        else:
+            dictionnaire["cumul"] = round(dictionnaire["cumul"] / accumulateur)
+            tab_classement.append(dictionnaire)
+            dictionnaire = dict()
+            dictionnaire["heure"] = tab_results[i].date
+            dictionnaire["cumul"] = tab_results[i].temperature
+            accumulateur=1
+    dictionnaire["cumul"] = round(dictionnaire["cumul"] / accumulateur)
+    tab_classement.append(dictionnaire)
+
+    return JsonResponse({'reponse': tab_classement})
+
+@api_view(['GET'])
+def getTemperatureByWeek(request):
+    today = datetime.now()
+    five_days = today - timedelta(days=5)
+    print(five_days)
+    tuples_entre_dates = Releve.objects.filter(
+        Q(date__gte=five_days) & Q(date__lte=today)
+    )
+
+    tab_results= []
+
+    for resultat in tuples_entre_dates:
+        resultat.date=str(resultat.date.day) + " "+str(resultat.date.month)
+        tab_results.append(resultat)
+
+    tab_classement = []
+    accumulateur = 0
+    taille = len(tab_results)
+    
+    dictionnaire = dict()
+    dictionnaire["jour"] = tab_results[0].date
+    dictionnaire["cumul"] = 0
+
+    for i in range(taille):
+        if tab_results[i].date == dictionnaire["jour"]:
+            dictionnaire["cumul"] = dictionnaire["cumul"]+tab_results[i].temperature
+            accumulateur=accumulateur+1
+        else:
+            dictionnaire["cumul"] = round(dictionnaire["cumul"] / accumulateur)
+            tab_classement.append(dictionnaire)
+            dictionnaire = dict()
+            dictionnaire["jour"] = tab_results[i].date
+            dictionnaire["cumul"] = tab_results[i].temperature
+            accumulateur=1
+    dictionnaire["cumul"] = round(dictionnaire["cumul"] / accumulateur)
+    tab_classement.append(dictionnaire)
+
+    return JsonResponse({'reponse': tab_classement})
