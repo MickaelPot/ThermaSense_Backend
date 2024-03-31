@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_crontab',
     'corsheaders',
     'backend',
     'rest_framework_simplejwt'
@@ -76,7 +77,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'therma_sense',
         'USER':'mickael',
-        'PASSWORD':'micka38',
+        #'PASSWORD':'micka38',
+        'PASSWORD':'Aurelie_74000',
         'HOST':'localhost',  
         'PORT':'3306'
     }
@@ -126,3 +128,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CRONJOBS = [
+    ('0 * * * *', 'backend.recuperationPeriodiqueTemperature', '>> /home/micka/sauvegarde.log'),
+]

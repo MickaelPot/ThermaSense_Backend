@@ -10,6 +10,7 @@ urlpatterns = [
     path('authorize/user/', views.authorizeUser),
     path('delete/user/', views.deleteUser),
     path('update/user/', views.updateUser),
+    #path('periodique/temperature/', views.recuperationPeriodiqueTemperature),
     path('test/backend/', views.testBackEnd),
-    path('token/decrypt/', views.decryptToken),
+    path('handleevent/', views.handle_event),
 ]

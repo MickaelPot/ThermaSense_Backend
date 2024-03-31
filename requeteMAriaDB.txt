@@ -7,12 +7,14 @@ create table therma_sense.backend_user(
     primary key(id)
 );
 
-create table projects(
-    project_id int auto_increment,
-    project_name varchar(255) not null,
-    begin_date date,
-    end_date date,
-    cost decimal(15,2) not null,
-    created_at timestamp default current_timestamp,
-    primary key(project_id)
+create table therma_sense.backend_releve(
+    id int auto_increment,
+    date DATETIME not null,
+    temperature int not null, 
+    primary key(id)
 );
+
+ALTER TABLE therma_sense.backend_releve MODIFY timestamp DATETIME;
+
+DROP TABLE therma_sense.backend_releve;
+

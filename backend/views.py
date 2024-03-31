@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.shortcuts import render
 from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
@@ -6,13 +7,24 @@ from rest_framework.decorators import api_view
 
 from rest_framework_simplejwt.tokens import RefreshToken
 import jwt
+import time
 
 
 from .serializers import UserSerializer
+from .serializers import ReleveSerializer
 from .model_user import User
 from django.contrib.auth.hashers import make_password, check_password
 
 from .controler_lora import demandeTemperature
+
+from .pompe_evenement import Evenement
+from .pompe_evenement import FunctionEvent
+import asyncio
+from.pompe_evenement import start_function_event_loop
+
+#Pompe à evenements
+event_queue = asyncio.Queue()
+start_function_event_loop(event_queue)
 
 @api_view(['GET'])
 def testBackEnd(request):
@@ -22,6 +34,7 @@ def testBackEnd(request):
 def getTemperature(request):
     if request.method=='GET':
         iot = demandeTemperature()
+        iot=iot.split('\x00')[0]
         data = {
             'temperature': iot,
         }
@@ -107,43 +120,31 @@ def authorizeUser(request):
     return JsonResponse({"message": "mail manquant"},safe=False)
 
 
-#@api_view(['POST'])
-#def decryptToken(request):
-#    data = JSONParser().parse(request)
-#    if "token" in data:
-#        print(data)
-#        token = jwt.decode(
-#            request.headers.get('Authorization'),
-#            "django-insecure-t0ih7)(l-xk!oprg=2mv+68#_dzdjr_hov$m6k1y%ni%cf*h7&",
-#            algorithms=['HS256'])
-#        #print(jwt.decode(data, "django-insecure-t0ih7)(l-xk!oprg=2mv+68#_dzdjr_hov$m6k1y%ni%cf*h7&", algorithms=["HS256"]))
-#        return JsonResponse({"message": "success"},safe=False)
-#    return JsonResponse({"message": "token manquant"},safe=False)
+#@api_view(['GET'])
+def recuperationPeriodiqueTemperature():
+    tm = datetime.now()
+    iot = demandeTemperature()
+    iot=iot.split('\x00')[0]
+    temperature = int(iot)
+    rel= dict()
+    rel["date"]= tm
+    rel["temperature"]= temperature
 
-@api_view(['get'])
-def decryptToken(request):
-    #token = jwt.decode(
-    #        request.headers.get('Authorization'),
-    #        "django-insecure-t0ih7)(l-xk!oprg=2mv+68#_dzdjr_hov$m6k1y%ni%cf*h7&",
-    #        algorithms=['HS256'])
-    print('TEST')
-    token = request.headers.get('Authorization')
-    print(token)
-    b = bytearray()
-    b.extend(map(ord, token))
-    token_decryt = jwt.decode(
-            b,
-            "django-insecure-t0ih7)(l-xk!oprg=2mv+68#_dzdjr_hov$m6k1y%ni%cf*h7&",
-            algorithms=['HS256'])
-    print(token_decryt)
+    releve_serializer=ReleveSerializer(data=rel)
+    if releve_serializer.is_valid():
+        releve_serializer.save()
+        return JsonResponse({"message": "success"},safe=False)
+    return JsonResponse({"message": "unsuccess"},safe=False)
+
+@csrf_exempt
+def handle_event(request):
+    event_name = request.POST.get('evenement')
+    param = request.POST.get('param')
+    function_event = FunctionEvent(event_name, param)
+    asyncio.run_coroutine_threadsafe(event_queue.put(function_event), asyncio.get_event_loop())
+    return JsonResponse({'status': 'success'})
+
+async def event_loop_startup():
+    await start_function_event_loop(event_queue)
 
 
-#    if "token" in data:
-#        print(data)
-#        token = jwt.decode(
-#            request.headers.get('Authorization'),
-#            "django-insecure-t0ih7)(l-xk!oprg=2mv+68#_dzdjr_hov$m6k1y%ni%cf*h7&",
-#            algorithms=['HS256'])
-#        #print(jwt.decode(data, "django-insecure-t0ih7)(l-xk!oprg=2mv+68#_dzdjr_hov$m6k1y%ni%cf*h7&", algorithms=["HS256"]))
-#        return JsonResponse({"message": "success"},safe=False)
-    return JsonResponse({"message": "token manquant"},safe=False)
