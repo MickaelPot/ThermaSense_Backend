@@ -24,9 +24,9 @@ from.pompe_evenement import start_function_event_loop
 
 #Pompe à evenements
 event_queue = asyncio.Queue()
-start_function_event_loop(event_queue)
+#start_function_event_loop(event_queue)
 
-@api_view(['GET'])
+#@api_view(['GET'])
 def testBackEnd(request):
     return JsonResponse({"message": "Le back end est fonctionnel"},safe=False)
 
@@ -34,7 +34,10 @@ def testBackEnd(request):
 def getTemperature(request):
     if request.method=='GET':
         iot = demandeTemperature()
-        iot=iot.split('\x00')[0]
+        if type(iot) == str:
+            iot=iot.split('\x00')[0]
+        else:
+            iot= str(iot)
         data = {
             'temperature': iot,
         }
@@ -124,11 +127,15 @@ def authorizeUser(request):
 def recuperationPeriodiqueTemperature():
     tm = datetime.now()
     iot = demandeTemperature()
-    iot=iot.split('\x00')[0]
-    temperature = int(iot)
+    if type(iot) == str:
+        iot=iot.split('\x00')[0]
+        temperature = int(iot)
+    else:
+        temperature = iot
     rel= dict()
     rel["date"]= tm
     rel["temperature"]= temperature
+    print("passe dans le cron")
 
     releve_serializer=ReleveSerializer(data=rel)
     if releve_serializer.is_valid():

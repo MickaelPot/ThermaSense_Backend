@@ -130,5 +130,6 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CRONJOBS = [
-    ('0 * * * *', 'backend.recuperationPeriodiqueTemperature', '>> /home/micka/sauvegarde.log'),
+    ('0 * * * *', 'backend.views.recuperationPeriodiqueTemperature'),
+    #('*/1 * * * *', 'backend.views.recuperationPeriodiqueTemperature'),
 ]
