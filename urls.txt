@@ -1,0 +1,2 @@
+backend SSH 176.144.99.87 : 8005
+backend server http://176.144.99.87:8010/
